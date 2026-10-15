@@ -1,16 +1,16 @@
 <p align="center"><img src="./docs/assets/img/lionkey-logo-v2-no-padding.svg" title="LionKey" alt="LionKey logo" height="100"></p>
 
-# LionKey NFC: A wireless upgrade to LionKey
+# LionKey Nordic: A NRF52840 port of Lionkey
 
 [![website](https://img.shields.io/badge/docs-lionkey.dev-A6672A)](https://lionkey.dev/)
 
-A working implementation of the NFC technology into the existing stack of the LionKey hardware security key. Implemented using the ST25R3916B chip. 
+Work in progress port of the LionKey hardware security key on Nordic NRF52840 USB Dongle.
 
 > [!TIP] 
 > The author of the base project is Ing. Martin Endler, see [pokusew/lionkey][LionKey Repo] for more information.
 
-> [!TIP]
-> This project was made as a part of my bachelor's thesis at CTU FEE. To find out more about the implementation, see [Matesin/bachelor-thesis][Thesis]
+> [!TIP] 
+> The author of the nfc upgrade project is Bc. Matyáš Martan, see [Matesin/lionkey-nfc][LionKey NFC Repo] and [Matesin/bachelor-thesis][Thesis] for more information.
 
 > [!WARNING]  
 > 🚧 This is still a work in progress. **The security key is already usable.**
@@ -127,6 +127,7 @@ and the HAL (hardware abstraction layer) and LL (low-level) drivers for the STM3
 
 
 <!-- links references -->
+[LionKey NFC Repo]: https://github.com/matesin/lionkey-nfc
 
 [Thesis]: https://github.com/Matesin/bachelor-thesis
 
