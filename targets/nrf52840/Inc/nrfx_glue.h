@@ -7,8 +7,8 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
@@ -55,7 +55,7 @@ extern "C" {
 
 // Uncomment this line to use the standard MDK way of binding IRQ handlers
 // at linking time.
-//#include <soc/nrfx_irqs.h>
+// #include <soc/nrfx_irqs.h>
 
 //------------------------------------------------------------------------------
 
@@ -81,14 +81,15 @@ extern "C" {
  * @param irq_number IRQ number.
  * @param priority   Priority to be set.
  */
-#define NRFX_IRQ_PRIORITY_SET(irq_number, priority)
+#define NRFX_IRQ_PRIORITY_SET(irq_number, priority)                            \
+  NVIC_SetPriority((irq_number), (priority))
 
 /**
  * @brief Macro for enabling a specific IRQ.
  *
  * @param irq_number IRQ number.
  */
-#define NRFX_IRQ_ENABLE(irq_number)
+#define NRFX_IRQ_ENABLE(irq_number) NVIC_EnableIRQ((irq_number))
 
 /**
  * @brief Macro for checking if a specific IRQ is enabled.
@@ -98,28 +99,28 @@ extern "C" {
  * @retval true  If the IRQ is enabled.
  * @retval false Otherwise.
  */
-#define NRFX_IRQ_IS_ENABLED(irq_number)
+#define NRFX_IRQ_IS_ENABLED(irq_number) (NVIC_GetEnableIRQ((irq_number)) != 0)
 
 /**
  * @brief Macro for disabling a specific IRQ.
  *
  * @param irq_number IRQ number.
  */
-#define NRFX_IRQ_DISABLE(irq_number)
+#define NRFX_IRQ_DISABLE(irq_number) NVIC_DisableIRQ((irq_number))
 
 /**
  * @brief Macro for setting a specific IRQ as pending.
  *
  * @param irq_number IRQ number.
  */
-#define NRFX_IRQ_PENDING_SET(irq_number)
+#define NRFX_IRQ_PENDING_SET(irq_number) NVIC_SetPendingIRQ((irq_number))
 
 /**
  * @brief Macro for clearing the pending status of a specific IRQ.
  *
  * @param irq_number IRQ number.
  */
-#define NRFX_IRQ_PENDING_CLEAR(irq_number)
+#define NRFX_IRQ_PENDING_CLEAR(irq_number) NVIC_ClearPendingIRQ((irq_number))
 
 /**
  * @brief Macro for checking the pending status of a specific IRQ.
@@ -127,7 +128,7 @@ extern "C" {
  * @retval true  If the IRQ is pending.
  * @retval false Otherwise.
  */
-#define NRFX_IRQ_IS_PENDING(irq_number)
+#define NRFX_IRQ_IS_PENDING(irq_number) (NVIC_GetPendingIRQ((irq_number)) != 0)
 
 /** @brief Macro for entering into a critical section. */
 #define NRFX_CRITICAL_SECTION_ENTER()
@@ -143,7 +144,7 @@ extern "C" {
  *        A compilation error is generated if the DWT unit is not present
  *        in the SoC used.
  */
-#define NRFX_DELAY_DWT_BASED    0
+#define NRFX_DELAY_DWT_BASED 0
 
 /**
  * @brief Macro for delaying the code execution for at least the specified time.
@@ -158,7 +159,8 @@ extern "C" {
 #define nrfx_atomic_t
 
 /**
- * @brief Macro for storing a value to an atomic object and returning its previous value.
+ * @brief Macro for storing a value to an atomic object and returning its
+ * previous value.
  *
  * @param[in] p_data Atomic memory pointer.
  * @param[in] value  Value to store.
@@ -168,7 +170,8 @@ extern "C" {
 #define NRFX_ATOMIC_FETCH_STORE(p_data, value)
 
 /**
- * @brief Macro for running a bitwise OR operation on an atomic object and returning its previous value.
+ * @brief Macro for running a bitwise OR operation on an atomic object and
+ * returning its previous value.
  *
  * @param[in] p_data Atomic memory pointer.
  * @param[in] value  Value of the second operand in the OR operation.
@@ -231,7 +234,8 @@ extern "C" {
  * @param[in]     new_value New value.
  *
  * @retval true  If value was updated.
- * @retval false If value was not updated because location was not equal to @p old_value.
+ * @retval false If value was not updated because location was not equal to @p
+ * old_value.
  */
 #define NRFX_ATOMIC_CAS(p_data, old_value, new_value)
 
@@ -240,8 +244,8 @@ extern "C" {
  *
  * @param[in] value A word value.
  *
- * @return Number of leading 0-bits in @p value, starting at the most significant bit position.
- *         If x is 0, the result is undefined.
+ * @return Number of leading 0-bits in @p value, starting at the most
+ * significant bit position. If x is 0, the result is undefined.
  */
 #define NRFX_CLZ(value)
 
@@ -250,8 +254,8 @@ extern "C" {
  *
  * @param[in] value A word value.
  *
- * @return Number of trailing 0-bits in @p value, starting at the least significant bit position.
- *         If x is 0, the result is undefined.
+ * @return Number of trailing 0-bits in @p value, starting at the least
+ * significant bit position. If x is 0, the result is undefined.
  */
 #define NRFX_CTZ(value)
 
@@ -277,7 +281,8 @@ extern "C" {
 //------------------------------------------------------------------------------
 
 /**
- * @brief Macro for writing back cache lines associated with the specified buffer.
+ * @brief Macro for writing back cache lines associated with the specified
+ * buffer.
  *
  * @note Macro should be empty if data cache is disabled or not present.
  *
@@ -287,7 +292,8 @@ extern "C" {
 #define NRFY_CACHE_WB(p_buffer, size)
 
 /**
- * @brief Macro for invalidating cache lines associated with the specified buffer.
+ * @brief Macro for invalidating cache lines associated with the specified
+ * buffer.
  *
  * @note Macro should be empty if data cache is disabled or not present.
  *
@@ -309,26 +315,33 @@ extern "C" {
 
 //------------------------------------------------------------------------------
 
-/** @brief Bitmask that defines DPPI channels that are reserved for use outside of the nrfx library. */
-#define NRFX_DPPI_CHANNELS_USED   0
+/** @brief Bitmask that defines DPPI channels that are reserved for use outside
+ * of the nrfx library. */
+#define NRFX_DPPI_CHANNELS_USED 0
 
-/** @brief Bitmask that defines DPPI groups that are reserved for use outside of the nrfx library. */
-#define NRFX_DPPI_GROUPS_USED     0
+/** @brief Bitmask that defines DPPI groups that are reserved for use outside of
+ * the nrfx library. */
+#define NRFX_DPPI_GROUPS_USED 0
 
-/** @brief Bitmask that defines PPI channels that are reserved for use outside of the nrfx library. */
-#define NRFX_PPI_CHANNELS_USED    0
+/** @brief Bitmask that defines PPI channels that are reserved for use outside
+ * of the nrfx library. */
+#define NRFX_PPI_CHANNELS_USED 0
 
-/** @brief Bitmask that defines PPI groups that are reserved for use outside of the nrfx library. */
-#define NRFX_PPI_GROUPS_USED      0
+/** @brief Bitmask that defines PPI groups that are reserved for use outside of
+ * the nrfx library. */
+#define NRFX_PPI_GROUPS_USED 0
 
-/** @brief Bitmask that defines GPIOTE channels that are reserved for use outside of the nrfx library. */
+/** @brief Bitmask that defines GPIOTE channels that are reserved for use
+ * outside of the nrfx library. */
 #define NRFX_GPIOTE_CHANNELS_USED 0
 
-/** @brief Bitmask that defines EGU instances that are reserved for use outside of the nrfx library. */
-#define NRFX_EGUS_USED            0
+/** @brief Bitmask that defines EGU instances that are reserved for use outside
+ * of the nrfx library. */
+#define NRFX_EGUS_USED 0
 
-/** @brief Bitmask that defines TIMER instances that are reserved for use outside of the nrfx library. */
-#define NRFX_TIMERS_USED          0
+/** @brief Bitmask that defines TIMER instances that are reserved for use
+ * outside of the nrfx library. */
+#define NRFX_TIMERS_USED 0
 
 /** @} */
 
