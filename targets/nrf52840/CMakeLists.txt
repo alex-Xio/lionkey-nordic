@@ -6,7 +6,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
 project(lionkey_nrf52840 C ASM)
-project(lionkey_nrf52840 C ASM)   # mirror how the stm32h533 target does project()/toolchain
 
 set(NRFX  ${CMAKE_CURRENT_LIST_DIR}/vendor/nrfx)
 set(CMSIS ${CMAKE_CURRENT_LIST_DIR}/vendor/CMSIS_6/CMSIS/Core/Include)
@@ -151,11 +150,10 @@ target_sources(tinyusb PUBLIC
 		../../lib/tinyusb/src/typec/usbc.c
 )
 target_sources(tinyusb PUBLIC
-		../../lib/tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
-		../../lib/tinyusb/src/portable/st/typec/typec_stm32.c
+		../../lib/tinyusb/src/portable/nordic/nrf5x/dcd_nrf5x.c
 )
 target_compile_definitions(tinyusb INTERFACE
-		CFG_TUSB_MCU=OPT_MCU_STM32H5
+		CFG_TUSB_MCU=OPT_MCU_NRF5X
 )
 target_include_directories(tinyusb INTERFACE ${TINYUSB_SRC})
 
@@ -186,10 +184,10 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME}
 		tinyusb
 		core
-		# app_hw_crypto
+		app_hw_crypto
 		# st25rfal
 		# nfc
-		# ctap_crypto_software
+		ctap_crypto_software
 )
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
