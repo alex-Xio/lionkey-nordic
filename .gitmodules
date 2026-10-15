@@ -13,3 +13,9 @@
 [submodule "crypto/tinymt"]
 	path = crypto/tinymt
 	url = https://github.com/MersenneTwister-Lab/TinyMT.git
+[submodule "targets/nrf52840/vendor/nrfx"]
+	path = targets/nrf52840/vendor/nrfx
+	url = https://github.com/NordicSemiconductor/nrfx.git
+[submodule "targets/nrf52840/vendor/CMSIS_6"]
+	path = targets/nrf52840/vendor/CMSIS_6
+	url = https://github.com/ARM-software/CMSIS_6.git
