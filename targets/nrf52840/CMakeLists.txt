@@ -162,7 +162,7 @@ target_link_directories(${PROJECT_NAME} PRIVATE)
 
 target_sources(${PROJECT_NAME} PRIVATE
 		#TODO;nrf implementation
-		# Src/usb_descriptors.c
+		Src/usb_descriptors.c
 		# Src/usb.c
 		# Src/app.c
 		# Src/app_test.c
@@ -191,10 +191,10 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 target_link_libraries(${PROJECT_NAME}
 		tinyusb
 		core
-		app_hw_crypto
+		#app_hw_crypto
 		# st25rfal
 		# nfc
-		ctap_crypto_software
+		#ctap_crypto_software
 )
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
