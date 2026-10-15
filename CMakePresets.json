@@ -64,7 +64,41 @@
 				"LIONKEY_DEBUG_LEVEL": "2",
 				"LIONKEY_DEVELOPMENT_OVERRIDE": "OFF"
 			}
-		}
+		},
+  {
+    "name": "nrf52840",
+    "inherits": "default",
+    "hidden": true,
+    "description": "Preset for the nrf52840 builds (nRF52840 USB Dongle)",
+    "toolchainFile": "${sourceDir}/targets/nrf52840/cmake/gcc-arm-none-eabi.cmake",
+    "cacheVariables": {
+      "BUILD_TARGET": "nrf52840"
+    }
+  },
+  {
+    "name": "nrf52840-debug",
+    "inherits": "nrf52840",
+    "cacheVariables": {
+      "CMAKE_BUILD_TYPE": "Debug"
+    }
+  },
+  {
+    "name": "nrf52840-debug-info-logs",
+    "inherits": "nrf52840-debug",
+    "cacheVariables": {
+      "LIONKEY_DEBUG_LEVEL": "2"
+    }
+  },
+  {
+    "name": "nrf52840-release",
+    "inherits": "nrf52840",
+    "cacheVariables": {
+      "CMAKE_BUILD_TYPE": "Release",
+      "LIONKEY_DEBUG_LEVEL": "2",
+      "LIONKEY_DEVELOPMENT_OVERRIDE": "OFF"
+    }
+  }
+
 	],
 	"buildPresets": [
 		{
@@ -86,6 +120,15 @@
 		{
 			"name": "stm32h533-release",
 			"configurePreset": "stm32h533-release"
+		},
+		{	"name": "nrf52840-debug",
+			"configurePreset": "nrf52840-debug"
+		},
+		{	"name": "nrf52840-debug-info-logs",
+			"configurePreset": "nrf52840-debug-info-logs"
+		},
+		{	"name": "nrf52840-release",
+			"configurePreset": "nrf52840-release"
 		}
 	],
 	"workflowPresets": [
@@ -151,6 +194,45 @@
 				{
 					"type": "build",
 					"name": "stm32h533-release"
+				}
+			]
+		},
+		{
+			"name": "nrf52840-debug",
+			"steps": [
+				{
+					"type": "configure",
+					"name": "nrf52840-debug"
+				},
+				{
+					"type": "build",
+					"name": "nrf52840-debug"
+				}
+			]
+		},
+		{
+			"name": "nrf52840-debug-info-logs",
+			"steps": [
+				{
+					"type": "configure",
+					"name": "nrf52840-debug-info-logs"
+				},
+				{
+					"type": "build",
+					"name": "nrf52840-debug-info-logs"
+				}
+			]
+		},
+		{
+			"name": "nrf52840-release",
+			"steps": [
+				{
+					"type": "configure",
+					"name": "nrf52840-release"
+				},
+				{
+					"type": "build",
+					"name": "nrf52840-release"
 				}
 			]
 		}

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.30)
 
 set(BUILD_TARGET "host" CACHE STRING "Build the embedded targets")
-set_property(CACHE BUILD_TARGET PROPERTY STRINGS "host" "stm32h533")
+set_property(CACHE BUILD_TARGET PROPERTY STRINGS "host" "stm32h533" "nrf52840")
 
 set(LIONKEY_DEBUG_LEVEL "3" CACHE STRING "0 - nothing, 1 - errors only, 2 - info logs, 3 - debug logs")
 set_property(CACHE LIONKEY_DEBUG_LEVEL PROPERTY STRINGS "0" "1" "2" "3")
