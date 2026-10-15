@@ -173,11 +173,18 @@ target_sources(${PROJECT_NAME} PRIVATE
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
+	${NRFX}
+    ${NRFX}/mdk
+    ${NRFX}/hal
+    ${NRFX}/drivers
+    ${NRFX}/drivers/include
+    ${NRFX}/helpers
+    ${CMSIS}
 )
 
+
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-#		NFC_DEMO_CE
-#		NFC_DEMO_BLOCKING
+	NRF52840_XXAA
 )
 
 # Add linked libraries
