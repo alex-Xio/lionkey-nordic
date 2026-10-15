@@ -431,7 +431,7 @@
  * Boolean. Accepted values: 0 and 1.
  */
 #ifndef NRFX_POWER_ENABLED
-#define NRFX_POWER_ENABLED 0
+#define NRFX_POWER_ENABLED 1
 #endif
 
 /**
