@@ -12,5 +12,6 @@ typedef enum Status_LED_Mode {
 } Status_LED_Mode;
 
 void Status_LED_Set_Mode(Status_LED_Mode mode);
+#define LED_PIN 12
 
 #endif  // LIONKEY_NRF52840_MAIN_H
