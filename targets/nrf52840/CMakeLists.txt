@@ -149,6 +149,7 @@ target_link_directories(${PROJECT_NAME} PRIVATE)
 target_sources(${PROJECT_NAME} PRIVATE
 		#TODO;nrf implementation
 		${NRFX}/mdk/gcc_startup_nrf52840.S
+		Src/startup.c
 		${NRFX}/mdk/system_nrf52840.c
     	${NRFX}/drivers/src/nrfx_clock.c
     	${NRFX}/drivers/src/nrfx_power.c
