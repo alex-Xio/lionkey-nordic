@@ -29,7 +29,7 @@ void timer_led_init() {
 
     nrf_gpio_cfg_output(LED_PIN);
     nrf_gpiote_task_configure(NRF_GPIOTE, 0, LED_PIN,
-                              NRF_GPIOTE_POLARITY_TOGGLE, 0);
+                              NRF_GPIOTE_POLARITY_TOGGLE, 1);
     nrf_gpiote_task_enable(NRF_GPIOTE, 0);
 
     nrf_timer_mode_set(nrf_timer, NRF_TIMER_MODE_TIMER);
@@ -57,6 +57,9 @@ void user_button_init() {
 }
 
 int main(void) {
+    SCB->VTOR = 0x00001000UL;  // must match FLASH ORIGIN in the linker script
+    __DSB();
+    __ISB();
     timer_led_init();
     user_button_init();
     // Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_NORMAL);
