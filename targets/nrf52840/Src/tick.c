@@ -20,7 +20,7 @@ void tick_init() {
     nrf_timer_task_trigger(NRF_TIMER1, NRF_TIMER_TASK_START);
 }
 
-uint32_t get_ticks() { return ticks; }
+uint32_t get_tick() { return ticks; }
 
 void TIMER1_IRQHandler() {
     if (nrf_timer_event_check(NRF_TIMER1, NRF_TIMER_EVENT_COMPARE0)) {
