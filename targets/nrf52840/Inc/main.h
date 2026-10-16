@@ -18,6 +18,8 @@ typedef enum Status_LED_Mode {
 
 void Status_LED_Set_Mode(Status_LED_Mode mode);
 
+void Error_Handler(void);
+
 #define LED_PIN NRF_GPIO_PIN_MAP(0, 12)
 #define BTN_PIN NRF_GPIO_PIN_MAP(1, 6)
 

@@ -1293,7 +1293,7 @@
  * Boolean. Accepted values: 0 and 1.
  */
 #ifndef NRFX_USBD_ENABLED
-#define NRFX_USBD_ENABLED 0
+#define NRFX_USBD_ENABLED 1
 #endif
 
 /**

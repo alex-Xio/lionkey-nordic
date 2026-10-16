@@ -1,0 +1,5 @@
+#ifndef LIONKEY_NRF52840_UTILS_H
+#define LIONKEY_NRF52840_UTILS_H
+#define UNUSED(x) (void)(x)
+
+#endif  // LIONKEY_NRF52840_UTILS_H

@@ -1,5 +1,6 @@
 #include "main.h"
 
+#include "app.h"
 #include "nrf.h"
 #include "nrf_gpio.h"
 #include "nrf_gpiote.h"
@@ -58,9 +59,8 @@ void user_button_init() {
 int main(void) {
     timer_led_init();
     user_button_init();
-    Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_NORMAL);
-    for (;;) {
-    }
+    // Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_NORMAL);
+    app_run();
 }
 
 void Status_LED_Set_Mode(Status_LED_Mode mode) {
@@ -98,5 +98,12 @@ void GPIOTE_IRQHandler() {
     if (nrf_gpiote_event_check(NRF_GPIOTE, NRF_GPIOTE_EVENT_IN_3)) {
         nrf_gpiote_event_clear(NRF_GPIOTE, NRF_GPIOTE_EVENT_IN_3);
         UserButtonState = BUTTON_PRESSED;
+    }
+}
+
+void Error_Handler(void) {
+    __disable_irq();
+    Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_SPECIAL);
+    while (1) {
     }
 }
