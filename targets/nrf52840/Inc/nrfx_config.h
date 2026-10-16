@@ -992,7 +992,7 @@
  * Boolean. Accepted values: 0 and 1.
  */
 #ifndef NRFX_TIMER_ENABLED
-#define NRFX_TIMER_ENABLED 0
+#define NRFX_TIMER_ENABLED 1
 #endif
 
 /**
@@ -1400,4 +1400,4 @@
 #define NRFX_WDT_CONFIG_LOG_LEVEL 3
 #endif
 
-#endif // NRFX_CONFIG_H__
+#endif  // NRFX_CONFIG_H__
