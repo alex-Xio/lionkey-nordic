@@ -6,8 +6,9 @@
 #include "nrf_ppi.h"
 #include "nrf_timer.h"
 
-const NRF_TIMER_Type* nrf_timer = NRF_TIMER0;
-const nrf_ppi_channel_t nrf_ppi_channel = NRF_PPI_CHANNEL0;
+NRF_TIMER_Type* nrf_timer = NRF_TIMER0;
+
+volatile ButtonState UserButtonState = BUTTON_RELEASED;
 
 void timer_clearstart() {
     nrf_timer_task_trigger(nrf_timer, NRF_TIMER_TASK_CLEAR);
@@ -16,11 +17,11 @@ void timer_clearstart() {
 
 void disable_gpiote_ppi() {
     nrf_gpiote_task_disable(NRF_GPIOTE, 0);
-    nrf_ppi_channel_disable(NRF_PPI, nrf_ppi_channel);
+    nrf_ppi_channel_disable(NRF_PPI, NRF_PPI_CHANNEL0);
 }
 void enable_gpiote_ppi() {
     nrf_gpiote_task_enable(NRF_GPIOTE, 0);
-    nrf_ppi_channel_enable(NRF_PPI, nrf_ppi_channel);
+    nrf_ppi_channel_enable(NRF_PPI, NRF_PPI_CHANNEL0);
 }
 void timer_led_init() {
     const nrf_timer_event_t nrf_timer_event = NRF_TIMER_EVENT_COMPARE0;
@@ -40,12 +41,24 @@ void timer_led_init() {
     uint32_t eep = nrf_timer_event_address_get(nrf_timer, nrf_timer_event);
     uint32_t tep =
         nrf_gpiote_task_address_get(NRF_GPIOTE, NRF_GPIOTE_TASK_OUT_0);
-    nrf_ppi_channel_endpoint_setup(NRF_PPI, nrf_ppi_channel, eep, tep);
-    nrf_ppi_channel_enable(NRF_PPI, nrf_ppi_channel);
+    nrf_ppi_channel_endpoint_setup(NRF_PPI, NRF_PPI_CHANNEL0, eep, tep);
+    nrf_ppi_channel_enable(NRF_PPI, NRF_PPI_CHANNEL0);
     nrf_timer_task_trigger(nrf_timer, NRF_TIMER_TASK_CLEAR);
 }
+
+void user_button_init() {
+    nrf_gpio_cfg_input(BTN_PIN, NRF_GPIO_PIN_PULLUP);
+    nrf_gpiote_event_configure(NRF_GPIOTE, 3, BTN_PIN,
+                               NRF_GPIOTE_POLARITY_HITOLO);
+    nrf_gpiote_int_enable(NRF_GPIOTE, NRF_GPIOTE_INT_IN3_MASK);
+    nrf_gpiote_event_enable(NRF_GPIOTE, 3);
+    NVIC_EnableIRQ(GPIOTE_IRQn);
+}
+
 int main(void) {
     timer_led_init();
+    user_button_init();
+    Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_NORMAL);
     for (;;) {
     }
 }
@@ -78,5 +91,12 @@ void Status_LED_Set_Mode(Status_LED_Mode mode) {
             enable_gpiote_ppi();
             timer_clearstart();
             break;
+    }
+}
+
+void GPIOTE_IRQHandler() {
+    if (nrf_gpiote_event_check(NRF_GPIOTE, NRF_GPIOTE_EVENT_IN_3)) {
+        nrf_gpiote_event_clear(NRF_GPIOTE, NRF_GPIOTE_EVENT_IN_3);
+        UserButtonState = BUTTON_PRESSED;
     }
 }

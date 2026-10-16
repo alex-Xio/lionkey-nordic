@@ -191,6 +191,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
 	NRF52840_XXAA
+	NRF_VTOR_CONFIG=0x00001000UL
 )
 
 # Add linked libraries
