@@ -49,20 +49,6 @@ target_sources(hkdf PRIVATE ../../crypto/hkdf/hkdf.c)
 target_include_directories(hkdf INTERFACE ../../crypto/hkdf)
 target_link_libraries(hkdf PUBLIC hash hmac)
 
-# add_library(sha256 STATIC)
-# target_sources(sha256 PRIVATE ../../crypto/sha256/sha256.c)
-# target_include_directories(sha256 INTERFACE ../../crypto/sha256)
-# target_link_libraries(sha256 PUBLIC hash)
-#
-# add_library(ctap_crypto_software STATIC)
-# target_sources(ctap_crypto_software PUBLIC
-# 		../../core/ctap_crypto_software.c
-# )
-# target_include_directories(ctap_crypto_software PUBLIC ../../core)
-# target_link_libraries(ctap_crypto_software
-# 		PUBLIC tinyaes micro_ecc tinymt32 sha256
-# )
-
 #TODO: hw crypto
 # add_library(app_hw_crypto STATIC)
 # target_sources(app_hw_crypto PUBLIC
@@ -168,8 +154,8 @@ target_sources(${PROJECT_NAME} PRIVATE
     	${NRFX}/drivers/src/nrfx_power.c
 		Src/usb_descriptors.c
 		Src/main.c
-		# Src/usb.c
-		# Src/app.c
+		Src/app.c
+		Src/usb.c
 		# Src/app_test.c
 		# Src/flash_storage.c
 		# Src/nfc_test.c
@@ -194,6 +180,44 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 	NRF_VTOR_CONFIG=0x00001000UL
 )
 
+#TODO: REMOVE AND IMPLEMENT HW CRYPTO
+
+add_library(sha256 STATIC)
+target_sources(sha256 PRIVATE ../../crypto/sha256/sha256.c)
+target_include_directories(sha256 INTERFACE ../../crypto/sha256)
+target_link_libraries(sha256 PUBLIC hash)
+
+add_library(tinymt32 STATIC)
+target_sources(tinymt32 PRIVATE ../../crypto/tinymt/tinymt/tinymt32.c)
+target_include_directories(tinymt32 INTERFACE ../../crypto/tinymt/tinymt)
+
+add_library(tinyaes STATIC)
+target_sources(tinyaes PRIVATE ../../crypto/tiny-AES-c/aes.c)
+target_include_directories(tinyaes INTERFACE ../../crypto/tinyaes)
+
+add_library(micro_ecc STATIC)
+target_sources(micro_ecc PRIVATE ../../crypto/micro-ecc/uECC.c)
+target_include_directories(micro_ecc INTERFACE ../../crypto/micro-ecc)
+
+add_library(ctap_crypto_software STATIC)
+target_sources(ctap_crypto_software PUBLIC
+		../../core/ctap_crypto_software.c
+)
+target_include_directories(ctap_crypto_software PUBLIC 
+		../../core
+		../../crypto/tinymt/tinymt
+		../../crypto/tiny-AES-c
+		../../crypto/micro-ecc
+		../../crypto/hash
+		../../crypto/hkdf
+		../../crypto/hmac
+		../../crypto/sha256
+		)
+target_link_libraries(ctap_crypto_software
+		PUBLIC tinyaes micro_ecc tinymt32 sha256
+)
+##
+
 # Add linked libraries
 target_link_libraries(${PROJECT_NAME}
 		tinyusb
@@ -201,7 +225,7 @@ target_link_libraries(${PROJECT_NAME}
 		#app_hw_crypto
 		# st25rfal
 		# nfc
-		#ctap_crypto_software
+		ctap_crypto_software
 )
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
