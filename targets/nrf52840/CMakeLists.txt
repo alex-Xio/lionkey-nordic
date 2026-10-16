@@ -156,6 +156,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 		Src/main.c
 		Src/app.c
 		Src/usb.c
+		Src/tick.c
 		# Src/app_test.c
 		# Src/flash_storage.c
 		# Src/nfc_test.c
@@ -225,7 +226,7 @@ target_link_libraries(${PROJECT_NAME}
 		#app_hw_crypto
 		# st25rfal
 		# nfc
-		ctap_crypto_software
+		# ctap_crypto_software
 )
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)

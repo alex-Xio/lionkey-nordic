@@ -207,7 +207,7 @@ void tud_hid_set_report_cb(uint8_t itf, uint8_t report_id,
     }
 
     const ctaphid_packet_t* packet = (const ctaphid_packet_t*)buffer;
-    app_handle_incoming_hid_packet(packet);
+    // app_handle_incoming_hid_packet(packet);
 }
 
 // Invoked when sent REPORT successfully to host

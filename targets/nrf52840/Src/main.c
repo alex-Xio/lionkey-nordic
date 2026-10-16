@@ -6,6 +6,7 @@
 #include "nrf_gpiote.h"
 #include "nrf_ppi.h"
 #include "nrf_timer.h"
+#include "tick.h"
 
 NRF_TIMER_Type* nrf_timer = NRF_TIMER0;
 
@@ -57,12 +58,10 @@ void user_button_init() {
 }
 
 int main(void) {
-    SCB->VTOR = 0x00001000UL;  // must match FLASH ORIGIN in the linker script
-    __DSB();
-    __ISB();
+    tick_init();
     timer_led_init();
     user_button_init();
-    // Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_NORMAL);
+    Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_NORMAL);
     app_run();
 }
 
@@ -98,6 +97,7 @@ void Status_LED_Set_Mode(Status_LED_Mode mode) {
 }
 
 void GPIOTE_IRQHandler() {
+    Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_SPECIAL);
     if (nrf_gpiote_event_check(NRF_GPIOTE, NRF_GPIOTE_EVENT_IN_3)) {
         nrf_gpiote_event_clear(NRF_GPIOTE, NRF_GPIOTE_EVENT_IN_3);
         UserButtonState = BUTTON_PRESSED;
