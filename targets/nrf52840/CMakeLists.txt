@@ -162,7 +162,12 @@ target_link_directories(${PROJECT_NAME} PRIVATE)
 
 target_sources(${PROJECT_NAME} PRIVATE
 		#TODO;nrf implementation
+		${NRFX}/mdk/gcc_startup_nrf52840.S
+		${NRFX}/mdk/system_nrf52840.c
+    	${NRFX}/drivers/src/nrfx_clock.c
+    	${NRFX}/drivers/src/nrfx_power.c
 		Src/usb_descriptors.c
+		Src/main.c
 		# Src/usb.c
 		# Src/app.c
 		# Src/app_test.c
@@ -174,6 +179,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 
 target_include_directories(${PROJECT_NAME} PRIVATE
 	${NRFX}
+	${CMAKE_CURRENT_LIST_DIR}/Inc
     ${NRFX}/mdk
     ${NRFX}/hal
     ${NRFX}/drivers
