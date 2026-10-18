@@ -4,7 +4,6 @@
 #include "nrf_gpio.h"
 #include "nrf_timer.h"
 uint32_t ticks = 0;
-uint8_t led = 0;
 
 void tick_init() {
     nrf_timer_mode_set(NRF_TIMER1, NRF_TIMER_MODE_TIMER);

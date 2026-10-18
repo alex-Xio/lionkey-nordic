@@ -63,6 +63,8 @@ int main(void) {
     user_button_init();
     Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_NORMAL);
     app_run();
+    // for (;;) {
+    // }
 }
 
 void Status_LED_Set_Mode(Status_LED_Mode mode) {
