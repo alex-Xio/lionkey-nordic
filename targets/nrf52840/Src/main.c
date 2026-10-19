@@ -61,10 +61,8 @@ int main(void) {
     tick_init();
     timer_led_init();
     user_button_init();
-    Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_NORMAL);
+    // Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_NORMAL);
     app_run();
-    // for (;;) {
-    // }
 }
 
 void Status_LED_Set_Mode(Status_LED_Mode mode) {
@@ -99,9 +97,9 @@ void Status_LED_Set_Mode(Status_LED_Mode mode) {
 }
 
 void GPIOTE_IRQHandler() {
-    Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_SPECIAL);
     if (nrf_gpiote_event_check(NRF_GPIOTE, NRF_GPIOTE_EVENT_IN_3)) {
         nrf_gpiote_event_clear(NRF_GPIOTE, NRF_GPIOTE_EVENT_IN_3);
+        Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_SPECIAL);
         UserButtonState = BUTTON_PRESSED;
     }
 }

@@ -21,7 +21,7 @@ static uint8_t app_ctaphid_cbor_response_buffer[CTAPHID_MAX_PAYLOAD_LENGTH];
 ctap_response_t app_ctap_response = {
     .data_max_size = sizeof(app_ctaphid_cbor_response_buffer) - 1,
     .data = &app_ctaphid_cbor_response_buffer[1]};
-ctap_state_t app_ctap = CTAP_STATE_CONST_INIT(&app_sw_crypto, &app_storage);
+// ctap_state_t app_ctap = CTAP_STATE_CONST_INIT(&app_sw_crypto, &app_storage);
 
 static ctap_keepalive_status_t app_ctap_last_status = CTAP_STATUS_PROCESSING;
 static uint32_t app_ctap_last_status_message_timestamp = 0;
@@ -136,17 +136,17 @@ static void app_init(void) {
     Status_LED_Set_Mode(STATUS_LED_MODE_ON);
 
     const uint32_t t1 = get_tick();
-    ctaphid_init(&app_ctaphid);
-    if (app_storage.init(&app_storage) != CTAP_STORAGE_OK) {
-        Error_Handler();
-    }
-    if (app_sw_crypto.init(&app_sw_crypto, 0) != CTAP_CRYPTO_OK) {
-        Error_Handler();
-    }
-    // if (app_hw_crypto.init(&app_hw_crypto, 0) != CTAP_CRYPTO_OK) {
+    // ctaphid_init(&app_ctaphid);
+    // if (app_storage.init(&app_storage) != CTAP_STORAGE_OK) {
     //     Error_Handler();
     // }
-    ctap_init(&app_ctap);
+    // if (app_sw_crypto.init(&app_sw_crypto, 0) != CTAP_CRYPTO_OK) {
+    //     Error_Handler();
+    // }
+    // // if (app_hw_crypto.init(&app_hw_crypto, 0) != CTAP_CRYPTO_OK) {
+    // //     Error_Handler();
+    // // }
+    // ctap_init(&app_ctap);
     const uint32_t t2 = get_tick();
 
     info_log("init done in %" PRId32 " ms" nl, t2 - t1);
@@ -257,7 +257,7 @@ noreturn void app_run(void) {
     while (true) {
         app_hid_task();
         // app_debug_task();
-        app_ctaphid_task();
+        // app_ctaphid_task();
         // app_nfc_task();
     }
 }

@@ -2,6 +2,7 @@
 #include "main.h"
 #include "nrf_usbd.h"
 #include "nrf_utils.h"
+#include "nrfx_power.h"
 #include "tusb.h"
 #include "utils.h"
 
@@ -14,9 +15,24 @@ static_assert(sizeof(ctaphid_packet_t) == CFG_TUD_ENDPOINT0_SIZE,
 TU_FIFO_DEF(app_hid_report_send_queue, (CTAPHID_MESSAGE_MAX_NUM_PACKETS),
             ctaphid_packet_t, false);
 
+extern void tusb_hal_nrf_power_event(uint32_t event);
+void USBD_IRQHandler(void) { tud_int_handler(0); }
+void POWER_CLOCK_IRQHandler(void) { nrfx_power_clock_irq_handler(); }
+
 void app_hid_task(void) {
     tud_task();  // tinyusb device task
     app_hid_report_send_queue_send_one_if_possible();
+}
+
+static void usb_power_init(void) {
+    const nrfx_power_config_t power_config = {0};
+    nrfx_power_init(&power_config);
+
+    const nrfx_power_usbevt_config_t usbevt_config = {
+        .handler = (nrfx_power_usb_event_handler_t)tusb_hal_nrf_power_event,
+    };
+    nrfx_power_usbevt_init(&usbevt_config);
+    nrfx_power_usbevt_enable();
 }
 
 void app_hid_report_send_queue_add(const ctaphid_packet_t* packet,
@@ -68,21 +84,7 @@ bool app_hid_report_send_queue_is_empty(void) {
 void usb_init(void) {
     debug_log("initializing usb ..." nl);
 
-    // Configure USB peripheral manually (TinyUSB does not use the HAL PCD
-    // layer) PCD = USB peripheral controller driver Note: We perform the
-    // configuration in the same order as in the CubeMX-generated
-    // HAL_PCD_MspInit.
-    // 1. Configure USB clock (but does not yet enable it).
-    nrf_usbd_enable(NRF_USBD);
-    // 2. Enable VDDUSB.
-    // HAL_PWREx_EnableVddUSB();
-    // // 3. Enable USB peripheral clock.
-    // __HAL_RCC_USB_CLK_ENABLE();
-
-    // Continue with the TinyUSB configration...
-    // init device stack on the configured roothub port
-    // (STM32H533RET6 only has one "roothub port", i.e., the USB 2.0 Full-Speed
-    // peripheral)
+    usb_power_init();
     tusb_rhport_init_t dev_init = {.role = TUSB_ROLE_DEVICE,
                                    .speed = TUSB_SPEED_AUTO};
     tusb_rhport_init(0, &dev_init);
@@ -119,22 +121,11 @@ void usb_init(void) {
 void tud_mount_cb(void) {
     info_log(green("usb device mounted") nl);
     Status_LED_Set_Mode(STATUS_LED_MODE_ON);
-    // Note:
-    //   This is a development-only workaround to simulate the "reboot" (MCU
-    //   reset) behavior even without the actual reset.
-    // Rationale:
-    //   During debugging, when LionKey is powered from ST-LINK, it is possible
-    //   to connect/disconnect/reconnect the USB (USER USB port) and the MCU
-    //   preserves its state (including RAM). During normal operation (no
-    //   ST-LINK connected), LionKey is powered directly from the USB bus (USER
-    //   USB port). Therefore, disconnecting USB powers down LionKey and the MCU
-    //   state (RAM) is lost. Once reconnected, the standard power-on reset
-    //   sequence runs (during which the pin_boot_remaining_attempts is set to
-    //   its per-boot value).
-#if LIONKEY_DEVELOPMENT_OVERRIDE == 1
-    app_ctap.init_time = ctap_get_current_time();
-    app_ctap.pin_boot_remaining_attempts = CTAP_PIN_PER_BOOT_ATTEMPTS;
-#endif
+
+    // #if LIONKEY_DEVELOPMENT_OVERRIDE == 1
+    //     app_ctap.init_time = ctap_get_current_time();
+    //     app_ctap.pin_boot_remaining_attempts = CTAP_PIN_PER_BOOT_ATTEMPTS;
+    // #endif
 }
 
 // Invoked when device is unmounted

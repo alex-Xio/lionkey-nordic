@@ -160,7 +160,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 		Src/tick.c
 		# Src/app_test.c
 		Src/flash.c
-		# Src/flash_storage.c
+		Src/flash_storage.c
 		# Src/nfc_test.c
 		# Src/demo_ce.c
 		# Src/eval_utils.c
