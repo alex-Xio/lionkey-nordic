@@ -159,6 +159,7 @@ target_sources(${PROJECT_NAME} PRIVATE
 		Src/usb.c
 		Src/tick.c
 		# Src/app_test.c
+		Src/flash.c
 		# Src/flash_storage.c
 		# Src/nfc_test.c
 		# Src/demo_ce.c
