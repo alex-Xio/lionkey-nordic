@@ -118,7 +118,7 @@ static ctap_storage_status_t program_word(const uint32_t word_addr,
     assert(FLASH_ADDRESS_ALIGHNED(word_addr));
     uint32_t tmp[FLASH_WORD_NUM_UINT32];
     memcpy(tmp, data, sizeof(tmp));
-    if (!flash_write_words(word_addr, data, FLASH_WORD_NUM_UINT32)) {
+    if (!flash_write_words(word_addr, tmp, FLASH_WORD_NUM_UINT32)) {
         error_log(red("flash_write_words failed") nl);
         return CTAP_STORAGE_ERROR;
     }
@@ -151,7 +151,7 @@ static uint32_t find_write_address(const ctap_storage_t* const storage) {
     }
 
     if (item.handle == 0u) {
-        return sector_base_address(0) + (2 * FLASH_WORD_SIZE);
+        return first_item_address();
     }
 
     return handle_to_address(item.handle) + compute_total_item_size(item.size);
@@ -176,15 +176,17 @@ static ctap_storage_status_t erase_and_init_pages() {
 
     return CTAP_STORAGE_OK;
 }
-
-static uint32_t find_counter_write_address(void) {
-    debug_log("find_counter_write_address" nl);
-
+static uint32_t should_initialize(void) {
+    const sector_header_t* const header =
+        (const sector_header_t*)(items_base());
+    return is_virgin_word((const uint32_t*)header) ||
+           header->version != FLASH_STORAGE_VERSION;
+}
+static uint32_t find_counter_write_address() {
     // find the address of the first 4-byte virgin word 0xFFFFFFFF within the
     // sector
-    const uint32_t* value = (const uint32_t*)(counter_page_base());
-    const uint32_t* const end =
-        (const uint32_t*)(high_cycling_area_bank_2_sector_0_end);
+    const uint32_t* value = (const uint32_t*)(counter_page_base(0u));
+    const uint32_t* const end = (const uint32_t*)(counter_page_base(2u));
     while (value < end) {
         if (*value == FLASH_STORAGE_VIRGIN_UINT32) {
             break;
@@ -214,4 +216,47 @@ ctap_storage_status_t nrf52840_flash_storage_init(
     context->write_address = find_write_address(storage);
     context->counter_write_address = find_counter_write_address();
     return CTAP_STORAGE_OK;
+}
+
+ctap_storage_status_t nrf52840_flash_storage_find_item(
+    const ctap_storage_t* storage, ctap_storage_item_t* item) {
+    nrf52840_flash_storage_context_t* context = storage->context;
+
+    const uint32_t min_address = first_item_address();
+    const uint32_t max_address = sector_base_address(1);
+
+    uint32_t address = min_address;
+
+    // continue iteration
+    if (item->handle != 0u) {
+        address = handle_to_address(item->handle) +
+                  compute_total_item_size(item->size);
+        assert(min_address <= address && address < max_address);
+    }
+
+    while (address < max_address) {
+        const item_header_t* const header = (const item_header_t*)(address);
+        const uint32_t* const delete_marker =
+            (const uint32_t*)(address + FLASH_WORD_SIZE);
+        const uint8_t* const data =
+            (const uint8_t*)(address + (2 * FLASH_WORD_SIZE));
+
+        if (is_virgin_word((const uint32_t*)header)) {
+            break;
+        }
+
+        if (*delete_marker == 0u) {
+            if (item->key == 0u || item->key == header->key) {
+                item->handle = address_to_handle(address);
+                item->key = header->key;
+                item->size = header->size;
+                item->data = data;
+                return CTAP_STORAGE_OK;
+            }
+        }
+
+        address += compute_total_item_size(header->size);
+    }
+
+    return CTAP_STORAGE_ITEM_NOT_FOUND;
 }
