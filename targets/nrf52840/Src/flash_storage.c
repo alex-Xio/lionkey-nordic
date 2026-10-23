@@ -325,3 +325,48 @@ ctap_storage_status_t nrf52840_flash_storage_create_item(
     context->write_address += total_item_size;
     return CTAP_STORAGE_OK;
 }
+
+ctap_storage_status_t nrf52840_flash_storage_create_or_update_item(
+    const ctap_storage_t* storage, ctap_storage_item_t* item) {
+    nrf52840_flash_storage_context_t* context = storage->context;
+
+    if (item->size > FLASH_STORAGE_ITEMS_SIZE) {
+        error_log(red("item size too large") nl);
+        return CTAP_STORAGE_OUT_OF_MEMORY_ERROR;
+    }
+
+    ctap_storage_item_t existing_item = {
+        .handle = 0u,
+        .key = item->key,
+    };
+    ctap_storage_status_t status =
+        nrf52840_flash_storage_find_item(storage, &existing_item);
+
+    if (status == CTAP_STORAGE_OK) {
+        ctap_storage_check(
+            nrf52840_flash_storage_delete_item(storage, existing_item.handle));
+    } else if (status != CTAP_STORAGE_ITEM_NOT_FOUND) {
+        return status;
+    }
+
+    const uint32_t total_size = compute_total_item_size(item->size);
+    const uint32_t new_write_address = context->write_address + total_size;
+    if (new_write_address > items_end()) {
+        error_log(red("not enough space to write item") nl);
+        return CTAP_STORAGE_OUT_OF_MEMORY_ERROR;
+    }
+
+    const item_header_t header = {
+        .key = item->key,
+        .size = item->size,
+        .word_2 = 0u,
+        .word_3 = 0u,
+    };
+    ctap_storage_check(program_word(context->write_address, &header));
+
+    const uint32_t delete_marker = 0u;
+    ctap_storage_check(
+        program_word(context->write_address + FLASH_WORD_SIZE, &delete_marker));
+    context->write_address += total_size;
+    return CTAP_STORAGE_OK;
+}
