@@ -99,7 +99,7 @@ void Status_LED_Set_Mode(Status_LED_Mode mode) {
 void GPIOTE_IRQHandler() {
     if (nrf_gpiote_event_check(NRF_GPIOTE, NRF_GPIOTE_EVENT_IN_3)) {
         nrf_gpiote_event_clear(NRF_GPIOTE, NRF_GPIOTE_EVENT_IN_3);
-        Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_SPECIAL);
+        // Status_LED_Set_Mode(STATUS_LED_MODE_BLINKING_SPECIAL);
         UserButtonState = BUTTON_PRESSED;
     }
 }
