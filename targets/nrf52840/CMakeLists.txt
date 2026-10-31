@@ -196,7 +196,7 @@ target_include_directories(tinymt32 INTERFACE ../../crypto/tinymt/tinymt)
 
 add_library(tinyaes STATIC)
 target_sources(tinyaes PRIVATE ../../crypto/tiny-AES-c/aes.c)
-target_include_directories(tinyaes INTERFACE ../../crypto/tinyaes)
+target_include_directories(tinyaes INTERFACE ../../crypto/tiny-AES-c)
 
 add_library(micro_ecc STATIC)
 target_sources(micro_ecc PRIVATE ../../crypto/micro-ecc/uECC.c)
@@ -228,7 +228,7 @@ target_link_libraries(${PROJECT_NAME}
 		#app_hw_crypto
 		# st25rfal
 		# nfc
-		# ctap_crypto_software
+		ctap_crypto_software
 )
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
