@@ -66,6 +66,8 @@ typedef struct LION_ATTR_PACKED item_checksum {
 static_assert(sizeof(item_checksum_t) == FLASH_WORD_SIZE,
               "sizeof(item_checksum_t) == FLASH_WORD_SIZE");
 
+static const uint8_t delete_marker_data[FLASH_WORD_SIZE] LION_ATTR_ALIGNED(4);
+
 LION_ATTR_ALWAYS_INLINE static inline uint32_t handle_to_address(
     const uint32_t handle) {
     return handle;
@@ -327,8 +329,7 @@ ctap_storage_status_t nrf52840_flash_storage_delete_item(
     assert(min_address <= item_address &&
            item_address < context->write_address);
 
-    const uint32_t delete_marker = 1u;
-    return program_word(item_address + FLASH_WORD_SIZE, &delete_marker);
+    return program_word(item_address + FLASH_WORD_SIZE, delete_marker_data);
 }
 
 ctap_storage_status_t nrf52840_flash_storage_create_item(
