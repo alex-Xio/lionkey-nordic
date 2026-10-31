@@ -332,17 +332,23 @@ ctap_storage_status_t nrf52840_flash_storage_delete_item(
     return program_word(item_address + FLASH_WORD_SIZE, delete_marker_data);
 }
 
-ctap_storage_status_t nrf52840_flash_storage_create_item(
-    const ctap_storage_t* storage, ctap_storage_item_t* item) {
+static ctap_storage_status_t create_item(const ctap_storage_t* storage,
+                                         ctap_storage_item_t* item) {
     nrf52840_flash_storage_context_t* context = storage->context;
+    ctap_storage_status_t status;
 
     assert(item->key != 0u);
     assert(item->size == 0u || item->data != NULL);
 
-    const uint32_t total_item_size = compute_total_item_size(item->size);
-    const uint32_t new_write_address = context->write_address + total_item_size;
+    if (item->size > FLASH_STORAGE_ITEMS_SIZE) {
+        error_log(red("item size too large") nl);
+        return CTAP_STORAGE_OUT_OF_MEMORY_ERROR;
+    }
 
-    if (new_write_address > items_end()) {
+    const uint32_t item_address = context->write_address;
+    const uint32_t total_item_size = compute_total_item_size(item->size);
+
+    if (item_address + total_item_size > items_end()) {
         error_log(red("not enough space to write item") nl);
         return CTAP_STORAGE_OUT_OF_MEMORY_ERROR;
     }
@@ -353,17 +359,26 @@ ctap_storage_status_t nrf52840_flash_storage_create_item(
         .word_2 = 0u,
         .word_3 = 0u,
     };
-    ctap_storage_status_t status;
-    ctap_storage_check(program_word(context->write_address, &header));
+    ctap_storage_check(program_word(item_address, &header));
 
-    const uint32_t delete_marker = 0u;
-    ctap_storage_check(
-        program_word(context->write_address + FLASH_WORD_SIZE, &delete_marker));
+    const uint32_t data_address = item_address + (2 * FLASH_WORD_SIZE);
+    uint32_t offset = 0u;
+    for (; offset + FLASH_WORD_SIZE <= item->size; offset += FLASH_WORD_SIZE) {
+        ctap_storage_check(
+            program_word(data_address + offset, &item->data[offset]));
+    }
 
-    ctap_storage_check(
-        program_word(context->write_address + (2 * FLASH_WORD_SIZE),
-                     (const uint32_t*)item->data));
-    context->write_address += total_item_size;
+    if (offset < item->size) {
+        uint8_t last_word[FLASH_WORD_SIZE];
+        memset(last_word, 0xFF, sizeof(last_word));
+        memcpy(last_word, &item->data[offset], item->size - offset);
+        ctap_storage_check(program_word(data_address + offset, last_word));
+    }
+
+    item->handle = address_to_handle(item_address);
+    item->data = (const uint8_t*)(data_address);
+
+    context->write_address = item_address + total_item_size;
     return CTAP_STORAGE_OK;
 }
 
