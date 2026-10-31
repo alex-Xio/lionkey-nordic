@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "flash.h"
+#include "nrf_utils.h"
 #include "utils.h"
 
 #define ctap_storage_check(expr)                \
@@ -233,21 +234,6 @@ static ctap_storage_status_t init_counter(
     return CTAP_STORAGE_OK;
 }
 
-static uint32_t find_counter_write_address() {
-    // find the address of the first 4-byte virgin word 0xFFFFFFFF within the
-    // sector
-    const uint32_t* value = (const uint32_t*)(counter_page_base(0u));
-    const uint32_t* const end = (const uint32_t*)(counter_page_base(2u));
-    while (value < end) {
-        if (*value == FLASH_STORAGE_VIRGIN_UINT32) {
-            break;
-        }
-        ++value;
-    }
-
-    return (uint32_t)value;
-}
-
 ctap_storage_status_t nrf52840_flash_storage_init(
     const ctap_storage_t* storage) {
     ctap_storage_status_t status;
@@ -474,14 +460,11 @@ ctap_storage_status_t nrf52840_flash_storage_increment_counter(
 size_t nrf52840_flash_storage_estimate_num_remaining_items(
     const ctap_storage_t* storage, const ctap_storage_item_t* item) {
     nrf52840_flash_storage_context_t* context = storage->context;
-
     const uint32_t total_size = compute_total_item_size(item->size);
-    const uint32_t new_write_address = context->write_address + total_size;
-    if (new_write_address > items_end()) {
+    if (context->write_address + total_size > items_end()) {
         return 0u;
     }
-
-    return (items_end() - new_write_address) / total_size;
+    return (items_end() - context->write_address) / total_size;
 }
 
 ctap_storage_status_t nrf52840_flash_storage_erase(
@@ -493,6 +476,6 @@ ctap_storage_status_t nrf52840_flash_storage_erase(
 
     nrf52840_flash_storage_context_t* context = storage->context;
     context->write_address = find_write_address(storage);
-    context->counter_write_address = find_counter_write_address();
+    ctap_storage_check(init_counter(context));
     return CTAP_STORAGE_OK;
 }
