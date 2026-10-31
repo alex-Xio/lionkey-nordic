@@ -370,3 +370,38 @@ ctap_storage_status_t nrf52840_flash_storage_create_or_update_item(
     context->write_address += total_size;
     return CTAP_STORAGE_OK;
 }
+
+ctap_storage_status_t nrf52840_flash_storage_increment_counter(
+    const ctap_storage_t* storage, uint32_t increment,
+    uint32_t* counter_new_value) {
+    nrf52840_flash_storage_context_t* context = storage->context;
+
+    uint32_t tmp_counter_value = 0u;
+
+    ctap_storage_item_t item = {
+        .handle = 0u,
+        .key = 0u,
+    };
+
+    if (nrf52840_flash_storage_find_item(storage, &item) == CTAP_STORAGE_OK) {
+        assert(item.size == sizeof(uint32_t));
+        tmp_counter_value = *((uint32_t*)item.data);
+    }
+
+    tmp_counter_value += increment;
+
+    item.size = sizeof(uint32_t);
+    item.data = (const uint8_t*)&tmp_counter_value;
+
+    if (nrf52840_flash_storage_create_or_update_item(storage, &item) ==
+        CTAP_STORAGE_OK) {
+        *counter_new_value = *((uint32_t*)item.data);
+        assert(*counter_new_value == tmp_counter_value);
+        debug_log("nrf52840_flash_storage_increment_counter" nl
+                  "  counter_new_value = %" PRIu32 nl,
+                  *counter_new_value);
+        return CTAP_STORAGE_OK;
+    }
+
+    return CTAP_STORAGE_ERROR;
+}
