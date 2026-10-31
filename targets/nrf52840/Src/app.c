@@ -1,12 +1,11 @@
-
 #include "app.h"
 
+#include "ctap_crypto_software.h"
+#include "flash_storage.h"
 #include "main.h"
 #include "nrf_utils.h"
 #include "tick.h"
 #include "usb.h"
-#include "ctap_crypto_software.h"
-#include "flash_storage.h"
 
 // static stm32h533_crypto_context_t app_hw_crypto_ctx;
 // const ctap_crypto_t app_hw_crypto =

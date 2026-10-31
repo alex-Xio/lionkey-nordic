@@ -185,6 +185,47 @@ static uint32_t should_initialize(void) {
     return is_virgin_word((const uint32_t*)header) ||
            header->version != FLASH_STORAGE_VERSION;
 }
+
+static uint32_t count_counter_entries(const uint32_t page_base) {
+    const uint32_t* const entries = (const uint32_t*)(page_base);
+    uint32_t n = 0u;
+    while (n < FLASH_STORAGE_COUNTER_ENTRIES_PER_PAGE &&
+           entries[n] != FLASH_STORAGE_VIRGIN_UINT32) {
+        n++;
+    }
+    return n;
+}
+
+static ctap_storage_status_t init_counter(
+    nrf52840_flash_storage_context_t* const context) {
+    ctap_storage_status_t status;
+
+    const uint32_t n0 = count_counter_entries(counter_page_base(0u));
+    const uint32_t n1 = count_counter_entries(counter_page_base(1u));
+
+    uint32_t active = 0u;
+
+    if (n0 == 0u) {
+        active = (n1 == 0u) ? 0u : 1u;
+    } else if (n1 == 0u) {
+        active = 0u;
+    } else {
+        const uint32_t last0 =
+            ((const uint32_t*)counter_page_base(0u))[n0 - 1u];
+        const uint32_t last1 =
+            ((const uint32_t*)counter_page_base(1u))[n1 - 1u];
+        active = (last1 > last0) ? 1u : 0u;
+        ctap_storage_check(erase_page(counter_page_base(active ^ 1u)));
+    }
+
+    context->counter_page = active;
+    context->counter_write_address =
+        counter_page_base(active) +
+        ((active == 0u) ? n0 : n1) * FLASH_STORAGE_COUNTER_ENTRY_SIZE;
+
+    return CTAP_STORAGE_OK;
+}
+
 static uint32_t find_counter_write_address() {
     // find the address of the first 4-byte virgin word 0xFFFFFFFF within the
     // sector
@@ -217,7 +258,7 @@ ctap_storage_status_t nrf52840_flash_storage_init(
     }
 
     context->write_address = find_write_address(storage);
-    context->counter_write_address = find_counter_write_address();
+    ctap_storage_check(init_counter(context));
     return CTAP_STORAGE_OK;
 }
 
@@ -374,35 +415,59 @@ ctap_storage_status_t nrf52840_flash_storage_increment_counter(
     const ctap_storage_t* storage, uint32_t increment,
     uint32_t* counter_new_value) {
     nrf52840_flash_storage_context_t* context = storage->context;
+    ctap_storage_status_t status;
 
-    uint32_t tmp_counter_value = 0u;
+    const uint32_t page_base = counter_page_base(context->counter_page);
+    const uint32_t page_end = page_base + FLASH_PAGE_SIZE;
 
-    ctap_storage_item_t item = {
-        .handle = 0u,
-        .key = 0u,
-    };
-
-    if (nrf52840_flash_storage_find_item(storage, &item) == CTAP_STORAGE_OK) {
-        assert(item.size == sizeof(uint32_t));
-        tmp_counter_value = *((uint32_t*)item.data);
+    // find the last value of the counter, or 1 if the page is empty
+    uint32_t last_value = 1u;
+    if (context->counter_write_address > page_base) {
+        last_value = *(const uint32_t*)(context->counter_write_address -
+                                        FLASH_STORAGE_COUNTER_ENTRY_SIZE);
     }
 
-    tmp_counter_value += increment;
-
-    item.size = sizeof(uint32_t);
-    item.data = (const uint8_t*)&tmp_counter_value;
-
-    if (nrf52840_flash_storage_create_or_update_item(storage, &item) ==
-        CTAP_STORAGE_OK) {
-        *counter_new_value = *((uint32_t*)item.data);
-        assert(*counter_new_value == tmp_counter_value);
-        debug_log("nrf52840_flash_storage_increment_counter" nl
-                  "  counter_new_value = %" PRIu32 nl,
-                  *counter_new_value);
-        return CTAP_STORAGE_OK;
+    const uint32_t new_value = last_value + increment;
+    if (new_value < last_value || new_value == FLASH_STORAGE_VIRGIN_UINT32) {
+        error_log(red("signature counter overflow") nl);
+        return CTAP_STORAGE_ERROR;
     }
 
-    return CTAP_STORAGE_ERROR;
+    if (context->counter_write_address < page_end) {
+        // active page has space for the new entry
+        if (!flash_write_words(context->counter_write_address, &new_value,
+                               1u)) {
+            error_log(red("increment_counter: flash_write_words failed") nl);
+            return CTAP_STORAGE_ERROR;
+        }
+        context->counter_write_address += FLASH_STORAGE_COUNTER_ENTRY_SIZE;
+    } else {
+        // active page is full
+        // write the new value to the other page, then erase the old page
+        const uint32_t other_page = context->counter_page ^ 1u;
+        const uint32_t other_base = counter_page_base(other_page);
+
+        if (count_counter_entries(other_base) != 0u) {
+            ctap_storage_check(erase_page(other_base));
+        }
+        if (!flash_write_words(other_base, &new_value, 1u)) {
+            error_log(red("increment_counter: flash_write_words failed") nl);
+            return CTAP_STORAGE_ERROR;
+        }
+        context->counter_page = other_page;
+        context->counter_write_address =
+            other_base + FLASH_STORAGE_COUNTER_ENTRY_SIZE;
+
+        if (erase_page(page_base) != CTAP_STORAGE_OK) {
+            error_log(red("could not erase the old counter page") nl);
+        }
+    }
+
+    *counter_new_value = new_value;
+    debug_log("nrf52840_flash_storage_increment_counter" nl
+              "  counter_new_value = %" PRIu32 nl,
+              *counter_new_value);
+    return CTAP_STORAGE_OK;
 }
 
 size_t nrf52840_flash_storage_estimate_num_remaining_items(

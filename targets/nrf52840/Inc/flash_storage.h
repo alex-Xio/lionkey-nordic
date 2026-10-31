@@ -6,6 +6,7 @@
 typedef struct nrf52840_flash_storage_context {
     uint32_t write_address;
     uint32_t counter_write_address;
+    uint32_t counter_page;  // page 0 or page 1
 } nrf52840_flash_storage_context_t;
 
 #define nrf52840_FLASH_STORAGE_CONST_INIT(context_ptr)                         \
