@@ -405,7 +405,7 @@ ctap_storage_status_t nrf52840_flash_storage_increment_counter(
     return CTAP_STORAGE_ERROR;
 }
 
-ctap_storage_status_t nrf52840_flash_storage_estimate_num_remaining_items(
+size_t nrf52840_flash_storage_estimate_num_remaining_items(
     const ctap_storage_t* storage, const ctap_storage_item_t* item) {
     nrf52840_flash_storage_context_t* context = storage->context;
 
