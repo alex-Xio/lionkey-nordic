@@ -114,7 +114,7 @@ static ctap_storage_status_t erase_page(const uint32_t page_addr) {
 }
 
 static ctap_storage_status_t program_word(const uint32_t word_addr,
-                                          const uint32_t* data) {
+                                          const void* data) {
     assert(FLASH_ADDRESS_ALIGHNED(word_addr));
     uint32_t tmp[FLASH_WORD_NUM_UINT32];
     memcpy(tmp, data, sizeof(tmp));
@@ -134,6 +134,9 @@ LION_ATTR_ALWAYS_INLINE static inline uint32_t first_item_address(void) {
     return items_base() + 2u * FLASH_WORD_SIZE;
 }
 
+LION_ATTR_ALWAYS_INLINE static inline uint32_t items_end(void) {
+    return items_base() + FLASH_STORAGE_ITEMS_NUM_PAGES * FLASH_PAGE_SIZE;
+}
 LION_ATTR_ALWAYS_INLINE static inline uint32_t counter_page_base(
     const uint32_t page) {
     return items_end() + page * FLASH_PAGE_SIZE;
@@ -216,10 +219,6 @@ ctap_storage_status_t nrf52840_flash_storage_init(
     context->write_address = find_write_address(storage);
     context->counter_write_address = find_counter_write_address();
     return CTAP_STORAGE_OK;
-}
-
-LION_ATTR_ALWAYS_INLINE static inline uint32_t items_end(void) {
-    return items_base() + FLASH_STORAGE_ITEMS_NUM_PAGES * FLASH_PAGE_SIZE;
 }
 
 ctap_storage_status_t nrf52840_flash_storage_find_item(
@@ -404,4 +403,30 @@ ctap_storage_status_t nrf52840_flash_storage_increment_counter(
     }
 
     return CTAP_STORAGE_ERROR;
+}
+
+ctap_storage_status_t nrf52840_flash_storage_estimate_num_remaining_items(
+    const ctap_storage_t* storage, const ctap_storage_item_t* item) {
+    nrf52840_flash_storage_context_t* context = storage->context;
+
+    const uint32_t total_size = compute_total_item_size(item->size);
+    const uint32_t new_write_address = context->write_address + total_size;
+    if (new_write_address > items_end()) {
+        return 0u;
+    }
+
+    return (items_end() - new_write_address) / total_size;
+}
+
+ctap_storage_status_t nrf52840_flash_storage_erase(
+    const ctap_storage_t* storage) {
+    ctap_storage_status_t status = erase_and_init_pages();
+    if (status != CTAP_STORAGE_OK) {
+        return status;
+    }
+
+    nrf52840_flash_storage_context_t* context = storage->context;
+    context->write_address = find_write_address(storage);
+    context->counter_write_address = find_counter_write_address();
+    return CTAP_STORAGE_OK;
 }
