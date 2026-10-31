@@ -295,7 +295,7 @@ ctap_storage_status_t nrf52840_flash_storage_find_item(
         // ceil_size_to_boundary(header->size)
         // );
 
-        if (*delete_marker == 0u) {
+        if (is_virgin_word(delete_marker)) {
             if (item->key == 0u || item->key == header->key) {
                 item->handle = address_to_handle(address);
                 item->key = header->key;
