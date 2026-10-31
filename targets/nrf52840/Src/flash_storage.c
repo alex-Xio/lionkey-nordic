@@ -144,22 +144,25 @@ LION_ATTR_ALWAYS_INLINE static inline uint32_t counter_page_base(
     return items_end() + page * FLASH_PAGE_SIZE;
 }
 static uint32_t find_write_address(const ctap_storage_t* const storage) {
-    ctap_storage_item_t item = {
-        .handle = 0u,
-        .key = 0u,
-    };
+    UNUSED(storage);
 
-    while (nrf52840_flash_storage_find_item(storage, &item) ==
-           CTAP_STORAGE_OK) {
-        // reset "search criteria" and continue iterating over the items
-        item.key = 0u;
+    const uint32_t max_address = items_end();
+    uint32_t address = first_item_address();
+
+    while (address < max_address) {
+        const item_header_t* const header = (const item_header_t*)(address);
+
+        if (is_virgin_word((const uint32_t*)header)) {
+            break;
+        }
+        if (header->size > FLASH_STORAGE_ITEMS_SIZE ||
+            address + compute_total_item_size(header->size) > max_address) {
+            break;  // corrupted header, stop searching
+        }
+        address += compute_total_item_size(header->size);
     }
 
-    if (item.handle == 0u) {
-        return first_item_address();
-    }
-
-    return handle_to_address(item.handle) + compute_total_item_size(item.size);
+    return address;
 }
 
 static ctap_storage_status_t erase_and_init_pages() {
@@ -212,6 +215,8 @@ static ctap_storage_status_t init_counter(
     } else if (n1 == 0u) {
         active = 0u;
     } else {
+        // if both pages have entries, the page with the larger last entry is
+        // the active one
         const uint32_t last0 =
             ((const uint32_t*)counter_page_base(0u))[n0 - 1u];
         const uint32_t last1 =
@@ -277,7 +282,7 @@ ctap_storage_status_t nrf52840_flash_storage_find_item(
     if (item->handle != 0u) {
         address = handle_to_address(item->handle) +
                   compute_total_item_size(item->size);
-        assert(min_address <= address && address < max_address);
+        assert(min_address <= address && address <= max_address);
     }
 
     while (address < max_address) {
@@ -288,6 +293,11 @@ ctap_storage_status_t nrf52840_flash_storage_find_item(
             (const uint8_t*)(address + (2 * FLASH_WORD_SIZE));
 
         if (is_virgin_word((const uint32_t*)header)) {
+            break;
+        }
+
+        if (header->size > FLASH_STORAGE_ITEMS_SIZE ||
+            address + compute_total_item_size(header->size) > max_address) {
             break;
         }
 
@@ -384,47 +394,22 @@ static ctap_storage_status_t create_item(const ctap_storage_t* storage,
 
 ctap_storage_status_t nrf52840_flash_storage_create_or_update_item(
     const ctap_storage_t* storage, ctap_storage_item_t* item) {
-    nrf52840_flash_storage_context_t* context = storage->context;
+    assert(item->key != 0u);
 
-    if (item->size > FLASH_STORAGE_ITEMS_SIZE) {
-        error_log(red("item size too large") nl);
-        return CTAP_STORAGE_OUT_OF_MEMORY_ERROR;
+    if (item->handle != 0u) {
+        ctap_storage_item_t new_item = *item;
+        if (create_item(storage, &new_item) != CTAP_STORAGE_OK) {
+            return CTAP_STORAGE_ERROR;
+        }
+        if (nrf52840_flash_storage_delete_item(storage, item->handle) !=
+            CTAP_STORAGE_OK) {
+            return CTAP_STORAGE_ERROR;
+        }
+        *item = new_item;
+        return CTAP_STORAGE_OK;
     }
 
-    ctap_storage_item_t existing_item = {
-        .handle = 0u,
-        .key = item->key,
-    };
-    ctap_storage_status_t status =
-        nrf52840_flash_storage_find_item(storage, &existing_item);
-
-    if (status == CTAP_STORAGE_OK) {
-        ctap_storage_check(
-            nrf52840_flash_storage_delete_item(storage, existing_item.handle));
-    } else if (status != CTAP_STORAGE_ITEM_NOT_FOUND) {
-        return status;
-    }
-
-    const uint32_t total_size = compute_total_item_size(item->size);
-    const uint32_t new_write_address = context->write_address + total_size;
-    if (new_write_address > items_end()) {
-        error_log(red("not enough space to write item") nl);
-        return CTAP_STORAGE_OUT_OF_MEMORY_ERROR;
-    }
-
-    const item_header_t header = {
-        .key = item->key,
-        .size = item->size,
-        .word_2 = 0u,
-        .word_3 = 0u,
-    };
-    ctap_storage_check(program_word(context->write_address, &header));
-
-    const uint32_t delete_marker = 0u;
-    ctap_storage_check(
-        program_word(context->write_address + FLASH_WORD_SIZE, &delete_marker));
-    context->write_address += total_size;
-    return CTAP_STORAGE_OK;
+    return create_item(storage, item);
 }
 
 ctap_storage_status_t nrf52840_flash_storage_increment_counter(
