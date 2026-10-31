@@ -52,4 +52,6 @@ bool flash_write_words(uint32_t address, const uint32_t* words,
             return false;
         }
     }
+
+    return true;
 }
